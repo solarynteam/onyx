@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Onyx — Your code. Your intelligence.</title>
-<meta name="description" content="Onyx is a free, local-first AI coding agent for Windows and macOS. Runs with Ollama, OpenCode Zen, OpenRouter or any OpenAI-compatible model. No account.">
+<meta name="description" content="Onyx is a free, local-first AI coding agent for Windows with its own built-in AI, Onyx Ruby. Also works with Ollama, OpenRouter, OpenCode and any OpenAI-compatible model. No account.">
 <meta property="og:title" content="Onyx — AI coding agent for Windows">
 <meta property="og:description" content="Ask once. Review the diff. Ship. Free local models, no account.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
+    --ruby: #e5484d; --ruby2: #ff8a8e;
     --black: #0b0b0b; --ink: #101010; --ink2: #171717; --line: #262626; --fg: #f5f5f5; --fg2: #a0a0a0; --fg3: #666;
     --paper: #f4f4f4; --paper-ink: #111; --paper-fg2: #555;
     --sans: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', Consolas, monospace;
@@ -37,7 +38,13 @@
   .lang { display: flex; gap: 2px; font-family: var(--mono); font-size: 11px; }
   .lang button { background: none; border: 0; color: var(--fg3); padding: 4px 7px; border-radius: 5px; cursor: pointer; font: inherit; }
   .lang button[aria-pressed="true"] { color: var(--fg); background: #1e1e1e; }
-  .pill { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 18px; border-radius: 999px; background: #fff; color: #0b0b0b; font-size: 14px; font-weight: 500; border: 0; cursor: pointer; transition: transform .15s ease, opacity .15s; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 18px; border-radius: 999px; background: #fff; color: #0b0b0b; font-size: 14px; font-weight: 500; border: 0; cursor: pointer; transition: transform .15s ease, opacity .15s, box-shadow .2s; }
+  .pill:hover { transform: translateY(-1px); box-shadow: 0 12px 40px -12px rgba(255,255,255,.45); }
+  .brand { background: linear-gradient(100deg, #fff 0%, #fff 35%, #8a8a8a 50%, #fff 65%, #fff 100%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; font-style: normal; animation: sheen 6s linear infinite; }
+  @keyframes sheen { from { background-position: 200% 0 } to { background-position: -200% 0 } }
+  .hero::before { content: ''; position: absolute; z-index: 1; width: 70vw; height: 70vw; left: -15vw; top: -20vw; background: radial-gradient(closest-side, rgba(255,255,255,.07), transparent 70%); filter: blur(40px); pointer-events: none; animation: drift 16s ease-in-out infinite; }
+  @keyframes drift { 50% { transform: translate(6vw, 4vw) scale(1.08) } }
+  @media (prefers-reduced-motion: reduce) { .brand, .hero::before { animation: none } }
   .pill:hover { opacity: .9; }
   .pill:active { transform: scale(.98); }
   .pill.big { height: 48px; padding: 0 26px; font-size: 15px; }
@@ -161,8 +168,8 @@
   <canvas id="field" aria-hidden="true"></canvas>
   <div class="wrap">
     <div class="reveal">
-      <h1 data-i18n-html="hero.title">Your code.<br>Your intelligence.</h1>
-      <p class="lead" data-i18n="hero.lead">Onyx is an AI coding agent for Windows and macOS. It reads your project, edits the files, runs the build and shows you exactly what changed. Free local models, no account.</p>
+      <h1 data-i18n-html="hero.title">Your code.<br>Your <em class="brand">intelligence.</em></h1>
+      <p class="lead" data-i18n="hero.lead">Onyx is an AI coding agent for Windows. It reads your project, edits the files, runs the build and shows you exactly what changed. Its own AI, Onyx Ruby, runs on your PC: free, no key, no account.</p>
       <div class="cta" id="download">
         <a class="pill big dl-primary" href="https://github.com/solarynteam/onyx/releases/latest">
           <span class="os-icon" aria-hidden="true"></span><span class="dl-label">Download for Windows</span>
@@ -258,7 +265,7 @@
       <li data-i18n="mh.3">If macOS says the app is damaged, open Terminal, run the command below, then open Onyx again.</li>
     </ol>
     <pre class="cmd">xattr -dr com.apple.quarantine /Applications/Onyx.app</pre>
-    <p data-i18n="mh.why">This happens because Onyx is free and not signed with a paid Apple Developer certificate. It is the same open-source build published on GitHub. On a Mac, Onyx tells you when a new version is out and you download it from this page.</p>
+    <p data-i18n="mh.why">This happens because Onyx is free and not signed with a paid Apple Developer certificate. It is the same build published on GitHub. On a Mac, Onyx tells you when a new version is out and you download it from this page.</p>
   </div>
 </section>
 
@@ -399,14 +406,14 @@
   // ---------- EN / FR ----------
   const FR = {
     'nav.features': 'Fonctions', 'nav.models': 'Modèles', 'nav.privacy': 'Confidentialité', 'nav.changelog': 'Nouveautés', 'nav.download': 'Télécharger',
-    'hero.title': 'Votre code.<br>Votre intelligence.',
-    'hero.lead': 'Onyx est un agent de code IA pour Windows et macOS. Il lit votre projet, modifie les fichiers, lance la compilation et vous montre exactement ce qui a changé. Modèles locaux gratuits, sans compte.',
+    'hero.title': 'Votre code.<br>Votre <em class="brand">intelligence.</em>',
+    'hero.lead': 'Onyx est un agent de code IA pour Windows. Il lit votre projet, modifie les fichiers, lance la compilation et vous montre exactement ce qui a changé. Son IA, Onyx Ruby, tourne sur votre PC : gratuite, sans clé, sans compte.',
     'cta.github': 'Voir les versions', 'cta.also': 'Aussi pour',
     'mac.note': 'Premier lancement sur Mac : dans Applications, clic droit sur Onyx, Ouvrir, puis Ouvrir à nouveau. Onyx n’est pas signé par Apple (99 $ par an), donc macOS demande une fois.', 'mac.more': 'Aide',
     'mh.title': 'Ouvrir Onyx sur un Mac', 'mh.1': 'Ouvrez le fichier .dmg et glissez Onyx dans Applications.',
     'mh.2': 'Dans Applications, clic droit (ou Ctrl-clic) sur Onyx, choisissez Ouvrir, puis Ouvrir à nouveau. Seulement la première fois.',
     'mh.3': 'Si macOS dit que l’app est endommagée, ouvrez Terminal, lancez la commande ci-dessous, puis rouvrez Onyx.',
-    'mh.why': 'Cela arrive parce qu’Onyx est gratuit et n’est pas signé avec un certificat Apple payant. C’est la même version open source publiée sur GitHub. Sur Mac, Onyx vous prévient quand une nouvelle version sort et vous la téléchargez depuis cette page.',
+    'mh.why': 'Cela arrive parce qu’Onyx est gratuit et n’est pas signé avec un certificat Apple payant. C’est la même version que celle publiée sur GitHub. Sur Mac, Onyx vous prévient quand une nouvelle version sort et vous la téléchargez depuis cette page.',
     'split.l.title': 'Local.', 'split.l.text': 'Faites tourner des modèles ouverts sur votre PC avec Ollama. Votre code ne quitte jamais la machine, rien à payer, fonctionne hors ligne.', 'split.l.meta': 'Ollama · LM Studio · 0 €',
     'split.r.title': 'Prudent.', 'split.r.text': 'Chaque modification est un diff que vous pouvez relire et annuler. Les commandes dangereuses demandent toujours. L’agent ne sort jamais du dossier du projet.', 'split.r.meta': 'Auto · Tout · Approbation',
     'shot.title': 'Chat, éditeur et terminal. Une seule fenêtre.', 'shot.sub': 'Éditeur Monaco, vrais terminaux PowerShell, explorateur, revue des modifications et Git, autour d’un agent qui exécute vraiment votre code.',
