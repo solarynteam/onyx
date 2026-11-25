@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Onyx — Your code. Your intelligence.</title>
+<meta name="description" content="Onyx is a free, local-first AI coding agent for Windows and macOS. Runs with Ollama, OpenCode Zen, OpenRouter or any OpenAI-compatible model. No account.">
+<meta property="og:title" content="Onyx — AI coding agent for Windows">
+<meta property="og:description" content="Ask once. Review the diff. Ship. Free local models, no account.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0b0b0b; --ink: #101010; --ink2: #171717; --line: #262626; --fg: #f5f5f5; --fg2: #a0a0a0; --fg3: #666;
+    --paper: #f4f4f4; --paper-ink: #111; --paper-fg2: #555;
+    --sans: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', Consolas, monospace;
+    --blocks: 'Cascadia Mono', Consolas, 'DejaVu Sans Mono', 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--black); color: var(--fg); font-family: var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: #fff; color: #000; }
+  .mono { font-family: var(--mono); }
+  .label { font-family: var(--mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 48px; }
+
+  /* nav */
+  nav { position: fixed; inset: 0 0 auto; z-index: 20; height: 64px; display: flex; align-items: center; }
+  nav .wrap { width: 100%; display: flex; align-items: center; justify-content: space-between; }
+  nav .brand svg { height: 15px; width: auto; display: block; }
+  nav .links { display: flex; gap: 32px; font-size: 14px; color: var(--fg2); }
+  nav .links a:hover { color: var(--fg); }
+  nav .right { display: flex; align-items: center; gap: 14px; }
+  .lang { display: flex; gap: 2px; font-family: var(--mono); font-size: 11px; }
+  .lang button { background: none; border: 0; color: var(--fg3); padding: 4px 7px; border-radius: 5px; cursor: pointer; font: inherit; }
+  .lang button[aria-pressed="true"] { color: var(--fg); background: #1e1e1e; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 18px; border-radius: 999px; background: #fff; color: #0b0b0b; font-size: 14px; font-weight: 500; border: 0; cursor: pointer; transition: transform .15s ease, opacity .15s; }
+  .pill:hover { opacity: .9; }
+  .pill:active { transform: scale(.98); }
+  .pill.big { height: 48px; padding: 0 26px; font-size: 15px; }
+  .pill svg { width: 16px; height: 16px; }
+  nav.scrolled { background: rgba(11,11,11,.82); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+
+  /* hero */
+  .hero { position: relative; min-height: 100vh; display: flex; align-items: center; overflow: hidden; }
+  #field { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .55; }
+  .hero::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 25% 55%, rgba(11,11,11,.96) 0%, rgba(11,11,11,.7) 38%, rgba(11,11,11,0) 70%); pointer-events: none; }
+  .hero .wrap { position: relative; z-index: 2; width: 100%; display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; padding-top: 80px; padding-bottom: 80px; }
+  h1 { font-size: clamp(56px, 8.2vw, 116px); line-height: .94; letter-spacing: -.045em; font-weight: 500; }
+  .lead { margin-top: 28px; max-width: 520px; font-size: 18px; line-height: 1.55; color: #bdbdbd; }
+  .cta { margin-top: 40px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+  .ghost { font-size: 15px; color: var(--fg2); border-bottom: 1px solid #555; padding-bottom: 2px; }
+  .ghost:hover { color: var(--fg); border-color: var(--fg); }
+  .meta { margin-top: 22px; color: var(--fg3); }
+  .meta b { color: var(--fg2); font-weight: 400; }
+  .wordmark { font-family: var(--blocks); line-height: 1; letter-spacing: 0; white-space: pre; color: #f2f2f2; font-size: clamp(7px, 1.05vw, 14px); text-shadow: 0 0 24px rgba(255,255,255,.12); justify-self: end; }
+
+  /* split panels (light / dark) */
+  .split { display: grid; grid-template-columns: 1fr 1fr; min-height: 92vh; }
+  .panel { position: relative; padding: 56px 48px; display: flex; flex-direction: column; justify-content: space-between; min-height: 560px; }
+  .panel.light { background: var(--paper); color: var(--paper-ink); }
+  .panel.dark { background: #000; color: var(--fg); }
+  .panel .art { font-family: var(--blocks); line-height: 1; white-space: pre; font-size: 13px; margin-top: 48px; }
+  .panel.dark .art { color: #4a4a4a; }
+  .panel h2 { font-size: clamp(64px, 8vw, 128px); line-height: .9; letter-spacing: -.05em; font-weight: 500; }
+  .panel.dark h2 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; letter-spacing: -.035em; }
+  .panel p { margin-top: 18px; max-width: 440px; font-size: 15px; line-height: 1.55; }
+  .panel.light p { color: var(--paper-fg2); }
+  .panel.dark p { color: var(--fg2); }
+  .panel .label { margin-top: 18px; opacity: .55; }
+
+  /* screenshot */
+  .shot { padding: 140px 0 120px; background: var(--black); }
+  .shot h3 { font-size: clamp(36px, 4.4vw, 60px); letter-spacing: -.035em; font-weight: 500; line-height: 1.02; max-width: 820px; }
+  .shot .sub { margin-top: 18px; color: var(--fg2); max-width: 560px; line-height: 1.55; }
+  .frame { margin-top: 64px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #000; box-shadow: 0 40px 120px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.02); }
+  .frame .bar { height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 14px; border-bottom: 1px solid var(--line); background: #0e0e0e; }
+  .frame .bar i { width: 10px; height: 10px; border-radius: 50%; background: #2a2a2a; display: block; }
+  .frame .bar span { margin-left: 10px; font-family: var(--mono); font-size: 11px; color: var(--fg3); }
+  .frame img { width: 100%; display: block; }
+
+  /* features */
+  .features { border-top: 1px solid var(--line); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .feat { padding: 40px 36px 44px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); min-height: 230px; }
+  .feat:nth-child(3n) { border-right: 0; }
+  .feat .label { color: var(--fg3); }
+  .feat h4 { margin-top: 26px; font-size: 22px; font-weight: 500; letter-spacing: -.02em; }
+  .feat p { margin-top: 10px; color: var(--fg2); font-size: 14.5px; line-height: 1.6; }
+
+  /* models strip */
+  .models { padding: 110px 0; border-bottom: 1px solid var(--line); }
+  .models .row { display: grid; grid-template-columns: 1fr 1.4fr; gap: 64px; align-items: start; }
+  .models h3 { font-size: clamp(36px, 4vw, 56px); letter-spacing: -.035em; font-weight: 500; line-height: 1.02; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  .tbl td { padding: 16px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .tbl td:first-child { width: 42%; }
+  .tbl td:last-child { color: var(--fg2); text-align: right; font-family: var(--mono); font-size: 12px; letter-spacing: .06em; }
+  .tbl .free { color: #e9e9e9; }
+
+  /* final */
+  .final { padding: 150px 0 110px; text-align: center; position: relative; overflow: hidden; }
+  .final h3 { font-size: clamp(48px, 7vw, 104px); letter-spacing: -.05em; font-weight: 500; line-height: .95; }
+  .final .cta { justify-content: center; }
+  footer { border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--fg3); font-size: 13px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  footer a:hover { color: var(--fg); }
+
+  .others { margin-top: 14px; font-size: 13px; color: var(--fg3); }
+  .others a { color: var(--fg2); border-bottom: 1px solid #3a3a3a; margin-left: 12px; }
+  .others a:hover { color: var(--fg); border-color: var(--fg); }
+  .others .soon { margin-left: 12px; color: var(--fg3); }
+  .mac-note { margin-top: 16px; max-width: 520px; font-size: 12.5px; line-height: 1.55; color: var(--fg3); }
+  .mac-note a { color: var(--fg2); border-bottom: 1px solid #3a3a3a; }
+  .os-icon svg { width: 16px; height: 16px; display: block; }
+  .machelp { padding: 100px 0; border-top: 1px solid var(--line); }
+  .machelp h3 { margin-top: 20px; font-size: clamp(32px, 3.6vw, 48px); letter-spacing: -.03em; font-weight: 500; }
+  .machelp ol { margin: 28px 0 0 20px; color: var(--fg2); line-height: 1.9; font-size: 15px; max-width: 720px; }
+  .machelp .cmd { margin-top: 22px; display: inline-block; max-width: 100%; overflow-x: auto; font-family: var(--mono); font-size: 13px; background: var(--ink2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; color: var(--fg); user-select: all; }
+  .machelp p { margin-top: 20px; max-width: 640px; color: var(--fg3); font-size: 13.5px; line-height: 1.6; }
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+
+  @media (max-width: 960px) {
+    .wrap { padding: 0 20px; }
+    nav .links { display: none; }
+    .hero .wrap { grid-template-columns: 1fr; padding-top: 110px; }
+    .wordmark { justify-self: start; font-size: 1.55vw; order: -1; }
+    .split { grid-template-columns: 1fr; }
+    .panel { padding: 40px 20px; min-height: 440px; }
+    .grid { grid-template-columns: 1fr; }
+    .feat { border-right: 0; }
+    .models .row { grid-template-columns: 1fr; gap: 32px; }
+    .shot { padding: 90px 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="wrap">
+    <a class="brand" href="#" aria-label="Onyx"><svg id="navlogo" viewBox="0 0 432 128" fill="#f5f5f5"></svg></a>
+    <div class="links">
+      <a href="#features" data-i18n="nav.features">Features</a>
+      <a href="#models" data-i18n="nav.models">Models</a>
+      <a href="#privacy" data-i18n="nav.privacy">Privacy</a>
+      <a href="https://github.com/solarynteam/onyx/releases" target="_blank" rel="noopener" data-i18n="nav.changelog">Changelog</a>
+    </div>
+    <div class="right">
+      <div class="lang" role="group" aria-label="Language"><button data-lang="en" aria-pressed="true">EN</button><button data-lang="fr" aria-pressed="false">FR</button></div>
+      <a class="pill" href="#download" data-i18n="nav.download">Download</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <canvas id="field" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div class="reveal">
+      <h1 data-i18n-html="hero.title">Your code.<br>Your intelligence.</h1>
+      <p class="lead" data-i18n="hero.lead">Onyx is an AI coding agent for Windows and macOS. It reads your project, edits the files, runs the build and shows you exactly what changed. Free local models, no account.</p>
+      <div class="cta" id="download">
+        <a class="pill big dl-primary" href="https://github.com/solarynteam/onyx/releases/latest">
+          <span class="os-icon" aria-hidden="true"></span><span class="dl-label">Download for Windows</span>
+        </a>
+        <a class="ghost" href="https://github.com/solarynteam/onyx/releases" target="_blank" rel="noopener" data-i18n="cta.github">View releases</a>
+      </div>
+      <div class="meta label"><b class="ver">—</b> · <span class="dl-meta">WINDOWS 10/11 · X64</span> <span class="dl-size"></span></div>
+      <div class="others"><span data-i18n="cta.also">Also for</span><span class="other-links"></span></div>
+      <p class="mac-note" hidden><span data-i18n="mac.note">First launch on macOS: in Applications, right-click Onyx, choose Open, then Open again. Onyx is not signed by Apple (that costs $99 a year), so macOS asks once.</span> <a href="#mac-help" data-i18n="mac.more">Help</a></p>
+    </div>
+    <pre class="wordmark reveal" id="hero-mark" aria-hidden="true"></pre>
+  </div>
+</header>
+
+<section class="split" id="privacy">
+  <div class="panel light">
+    <div>
+      <a class="brand" aria-hidden="true"><svg class="minilogo" viewBox="0 0 432 128" fill="#111" style="height:14px"></svg></a>
+      <pre class="art" id="art-o" aria-hidden="true"></pre>
+    </div>
+    <div class="reveal">
+      <h2 data-i18n="split.l.title">Local.</h2>
+      <p data-i18n="split.l.text">Run open models on your own PC with Ollama. Your code never leaves the machine, nothing to pay, works offline.</p>
+      <div class="label" data-i18n="split.l.meta">Ollama · LM Studio · €0</div>
+    </div>
+  </div>
+  <div class="panel dark">
+    <div><pre class="art" id="art-x" aria-hidden="true"></pre></div>
+    <div class="reveal">
+      <h2 data-i18n="split.r.title">Careful.</h2>
+      <p data-i18n="split.r.text">Every edit is a diff you can review and revert. Dangerous commands always ask first. The agent never leaves your project folder.</p>
+      <div class="label" data-i18n="split.r.meta">Auto · All · Approval</div>
+    </div>
+  </div>
+</section>
+
+<section class="shot">
+  <div class="wrap">
+    <h3 class="reveal" data-i18n="shot.title">Chat, editor and terminal. One window.</h3>
+    <p class="sub reveal" data-i18n="shot.sub">Monaco editor, real PowerShell terminals, file explorer, change review and Git, around an agent that actually runs your code.</p>
+    <div class="frame reveal">
+      <div class="bar"><i></i><i></i><i></i><span>Onyx — Workspace</span></div>
+      <img src="assets/onyx-workspace.png" alt="Onyx workspace: file explorer, code editor, terminal and AI chat" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section class="features" id="features">
+  <div class="grid">
+    <div class="feat reveal"><div class="label">01 · Agent</div><h4 data-i18n="f1.t">Ask once. It builds.</h4><p data-i18n="f1.p">Inspects the project, writes files, runs the build or the tests, reads the errors and fixes them until it works.</p></div>
+    <div class="feat reveal"><div class="label">02 · Plan</div><h4 data-i18n="f2.t">Plan before code</h4><p data-i18n="f2.p">Plan mode proposes concrete steps you approve, then tracks progress live while it implements them.</p></div>
+    <div class="feat reveal"><div class="label">03 · Review</div><h4 data-i18n="f3.t">Every change is a diff</h4><p data-i18n="f3.p">Added and removed lines per file, per task. Revert one file or the whole task in a click.</p></div>
+    <div class="feat reveal"><div class="label">04 · Run</div><h4 data-i18n="f4.t">Test it right there</h4><p data-i18n="f4.p">Run Python, JS or PowerShell from a chat answer or the editor, preview HTML in its own window.</p></div>
+    <div class="feat reveal"><div class="label">05 · Updates</div><h4 data-i18n="f5.t">Always up to date</h4><p data-i18n="f5.p">New versions download in the background, are verified, and install when you restart.</p></div>
+    <div class="feat reveal"><div class="label">06 · FR / EN</div><h4 data-i18n="f6.t">No account</h4><p data-i18n="f6.p">Install and go. History, projects and keys stay on your PC, keys encrypted by Windows.</p></div>
+  </div>
+</section>
+
+<section class="models" id="models">
+  <div class="wrap row">
+    <div class="reveal">
+      <div class="label" style="color:var(--fg3)" data-i18n="models.kicker">Models</div>
+      <h3 style="margin-top:22px" data-i18n="models.title">Bring any model. Pay nothing if you want.</h3>
+    </div>
+    <table class="tbl reveal">
+      <tr><td>Ollama</td><td class="free" data-i18n="m.ollama">LOCAL · FREE</td></tr>
+      <tr><td>OpenCode Zen</td><td data-i18n="m.zen">FREE MODELS · LIMITED</td></tr>
+      <tr><td>OpenRouter</td><td data-i18n="m.or">:FREE MODELS + PAID</td></tr>
+      <tr><td>Google Gemini · Groq · Mistral</td><td data-i18n="m.tiers">FREE TIERS</td></tr>
+      <tr><td>OpenAI · DeepSeek</td><td data-i18n="m.paid">YOUR API KEY</td></tr>
+      <tr><td>LM Studio · llama.cpp · vLLM</td><td data-i18n="m.local">LOCAL · FREE</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap reveal">
+    <h3 data-i18n-html="final.title">Ask once.<br>Review. Ship.</h3>
+    <div class="cta" style="margin-top:44px">
+      <a class="pill big dl-primary" href="https://github.com/solarynteam/onyx/releases/latest"><span class="os-icon" aria-hidden="true"></span><span class="dl-label">Download for Windows</span></a>
+    </div>
+    <div class="meta label" style="margin-top:20px"><b class="ver">—</b> · <span data-i18n="final.free">Free</span></div>
+  </div>
+</section>
+
+<section class="machelp" id="mac-help">
+  <div class="wrap">
+    <div class="label" style="color:var(--fg3)">macOS</div>
+    <h3 data-i18n="mh.title">Opening Onyx on a Mac</h3>
+    <ol>
+      <li data-i18n="mh.1">Open the .dmg file and drag Onyx into Applications.</li>
+      <li data-i18n="mh.2">In Applications, right-click (or Control-click) Onyx, choose Open, then Open again. Only needed the first time.</li>
+      <li data-i18n="mh.3">If macOS says the app is damaged, open Terminal, run the command below, then open Onyx again.</li>
+    </ol>
+    <pre class="cmd">xattr -dr com.apple.quarantine /Applications/Onyx.app</pre>
+    <p data-i18n="mh.why">This happens because Onyx is free and not signed with a paid Apple Developer certificate. It is the same open-source build published on GitHub. On a Mac, Onyx tells you when a new version is out and you download it from this page.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© <span id="year"></span> Solaryn Team · Onyx · <a href="https://github.com/solarynteam/onyx/blob/main/LICENSE" data-i18n="footer.rights">All rights reserved</a></span>
+    <span><a href="https://github.com/solarynteam/onyx" target="_blank" rel="noopener">GitHub</a> · <a href="https://github.com/solarynteam/onyx/releases" target="_blank" rel="noopener" data-i18n="nav.changelog">Changelog</a></span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  // ---------- ONYX wordmark geometry (same as the app: src/shared/logo.json) ----------
+  const W = 432, H = 128
+  const GLYPHS = [
+    [[[24,0],[72,0],[96,24],[96,104],[72,128],[24,128],[0,104],[0,24]], [[36,26],[60,26],[70,36],[70,92],[60,102],[36,102],[26,92],[26,36]]],
+    [[[112,0],[140,0],[182,80],[182,0],[208,0],[208,128],[180,128],[138,48],[138,128],[112,128]]],
+    [[[224,0],[253,0],[272,42],[291,0],[320,0],[285,72],[285,128],[259,128],[259,72]]],
+    [[[336,0],[365,0],[384,38],[403,0],[432,0],[399,64],[432,128],[403,128],[384,90],[365,128],[336,128],[369,64]]]
+  ]
+  const inPoly = (x, y, p) => { let r = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [xi, yi] = p[i], [xj, yj] = p[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) r = !r } return r }
+  const inGlyphs = (gs, x, y) => gs.some((g) => g.filter((p) => inPoly(x, y, p)).length % 2 === 1)
+  const pathD = (gs) => gs.map((g) => g.map((s) => 'M' + s.map(([x, y]) => x + ' ' + y).join(' L') + ' Z').join(' '))
+  for (const svg of document.querySelectorAll('#navlogo, .minilogo')) svg.innerHTML = pathD(GLYPHS).map((d) => `<path fill-rule="evenodd" d="${d}"/>`).join('')
+
+  // Half-block rendering (█ ▀ ▄), exactly like the app's ASCII art.
+  function blocks(gs, w, h, cols, rows) {
+    const pr = rows * 2, sx = w / cols, sy = h / pr
+    const f = (c, r) => { let k = 0; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) if (inGlyphs(gs, (c + (i + .5) / 3) * sx, (r + (j + .5) / 3) * sy)) k++; return k >= 5 }
+    const out = []
+    for (let r = 0; r < pr; r += 2) { let l = ''; for (let c = 0; c < cols; c++) { const t = f(c, r), b = f(c, r + 1); l += t && b ? '█' : t ? '▀' : b ? '▄' : ' ' } out.push(l.replace(/\s+$/, '')) }
+    return out.join('\n')
+  }
+  document.getElementById('hero-mark').textContent = blocks(GLYPHS, W, H, 54, 8)
+  document.getElementById('art-o').textContent = blocks([GLYPHS[0]], 96, 128, 14, 9)
+  document.getElementById('art-x').textContent = blocks([GLYPHS[3].map((p) => p.map(([x, y]) => [x - 336, y]))], 96, 128, 14, 9)
+
+  // ---------- Animated ASCII field behind the hero ----------
+  const canvas = document.getElementById('field'), ctx = canvas.getContext('2d')
+  const CH = ' .·:-=+*%#█'
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+  let cw = 9, chh = 15, cols = 0, rows = 0, raf = 0
+  function resize() {
+    const dpr = Math.min(devicePixelRatio || 1, 2)
+    canvas.width = canvas.clientWidth * dpr; canvas.height = canvas.clientHeight * dpr
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    cols = Math.ceil(canvas.clientWidth / cw); rows = Math.ceil(canvas.clientHeight / chh)
+    ctx.font = `11px 'JetBrains Mono', monospace`; ctx.textBaseline = 'top'
+  }
+  // Smooth flowing value: layered sines (cheap, no dependency).
+  const v = (x, y, t) => {
+    const a = Math.sin(x * .045 + t * .6) + Math.sin(y * .07 - t * .45) + Math.sin((x + y) * .03 + t * .3)
+    const b = Math.sin(Math.hypot(x - cols * .78, (y - rows * .45) * 1.8) * .11 - t * .9)
+    return (a / 3) * .55 + b * .45
+  }
+  function draw(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const n = v(x, y, t) * .5 + .5
+      const fall = Math.max(0, 1 - Math.hypot((x / cols - .78) * 1.4, (y / rows - .5) * 1.1) * 1.55)
+      const k = Math.floor(n * fall * (CH.length - 1) * 1.35)
+      if (k <= 0) continue
+      ctx.fillStyle = `rgba(245,245,245,${.18 + .55 * n * fall})`
+      ctx.fillText(CH[Math.min(k, CH.length - 1)], x * cw, y * chh)
+    }
+  }
+  function loop(ms) { draw(ms / 1000); raf = requestAnimationFrame(loop) }
+  resize(); addEventListener('resize', () => { resize(); if (reduce) draw(0) })
+  if (reduce) draw(0); else raf = requestAnimationFrame(loop)
+  document.addEventListener('visibilitychange', () => { if (reduce) return; if (document.hidden) cancelAnimationFrame(raf); else raf = requestAnimationFrame(loop) })
+
+  // ---------- Downloads: detect the visitor's OS, read installers from the latest GitHub release ----------
+  const RELEASES = 'https://github.com/solarynteam/onyx/releases/latest'
+  const ICON = {
+    win: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.1 10.4 4v7.2H3zm0 13.8 7.4 1.1v-7.1H3zM11.3 3.9 21 2.5v8.7h-9.7zm0 16.2 9.7 1.4v-8.6h-9.7z"/></svg>',
+    mac: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.6 2.1-3.8 2.2-3.9-1.2-1.8-3.1-2-3.7-2-1.6-.2-3.1.9-3.9.9-.8 0-2-.9-3.4-.9-1.7 0-3.3 1-4.2 2.6-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8s2 .8 3.4.8c1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.7-1-2.7-4.1zM13.9 5c.7-.8 1.2-2 1-3.1-1 0-2.2.7-2.9 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.9-1.4z"/></svg>'
+  }
+  const PLATFORMS = {
+    win: { key: 'win', icon: 'win', label: { en: 'Download for Windows', fr: 'Télécharger pour Windows' }, short: 'Windows', meta: 'WINDOWS 10/11 · X64', match: (n) => /\.exe$/i.test(n) },
+    'mac-arm': { key: 'mac-arm', icon: 'mac', label: { en: 'Download for Mac', fr: 'Télécharger pour Mac' }, short: 'macOS Apple Silicon', meta: 'MACOS 12+ · APPLE SILICON', match: (n) => /arm64\.dmg$/i.test(n) },
+    'mac-intel': { key: 'mac-intel', icon: 'mac', label: { en: 'Download for Mac (Intel)', fr: 'Télécharger pour Mac (Intel)' }, short: 'macOS Intel', meta: 'MACOS 12+ · INTEL', match: (n) => /x64\.dmg$/i.test(n) }
+  }
+  // Browsers hide the Mac CPU type; Apple Silicon is the default (every Mac since 2020). WebGL helps detect Intel GPUs.
+  function detectOS() {
+    const ua = navigator.userAgent
+    if (/Macintosh|Mac OS X/.test(ua) && !/iPhone|iPad/.test(ua)) {
+      try {
+        const gl = document.createElement('canvas').getContext('webgl')
+        const ext = gl && gl.getExtension('WEBGL_debug_renderer_info')
+        const r = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : ''
+        if (/Intel|AMD|Radeon/i.test(r) && !/Apple M\d/i.test(r)) return 'mac-intel'
+      } catch {}
+      return 'mac-arm'
+    }
+    return 'win'
+  }
+  // ?os=win | mac-arm | mac-intel forces a platform (handy for sharing a specific download page).
+  const forced = new URLSearchParams(location.search).get('os')
+  const current = forced && PLATFORMS[forced] ? forced : detectOS()
+  const assets = {} // platform key -> { url, size }
+  let version = ''
+  function renderDownloads() {
+    const lang = document.documentElement.lang === 'fr' ? 'fr' : 'en'
+    const p = PLATFORMS[current], a = assets[current]
+    for (const el of document.querySelectorAll('.dl-primary')) {
+      el.href = a ? a.url : RELEASES
+      el.querySelector('.os-icon').innerHTML = ICON[p.icon]
+      el.querySelector('.dl-label').textContent = p.label[lang]
+    }
+    for (const el of document.querySelectorAll('.dl-meta')) el.textContent = p.meta
+    for (const el of document.querySelectorAll('.dl-size')) el.textContent = a && a.size ? '· ' + Math.round(a.size / 1048576) + ' MB' : ''
+    if (version) for (const el of document.querySelectorAll('.ver')) el.textContent = 'V' + version
+    const soon = lang === 'fr' ? 'bientôt' : 'soon'
+    for (const box of document.querySelectorAll('.other-links')) {
+      box.innerHTML = ''
+      for (const k of Object.keys(PLATFORMS).filter((k) => k !== current)) {
+        const o = PLATFORMS[k], oa = assets[k]
+        if (oa) { const link = document.createElement('a'); link.href = oa.url; link.textContent = o.short; box.appendChild(link) }
+        else { const s = document.createElement('span'); s.className = 'soon'; s.textContent = `${o.short} (${soon})`; box.appendChild(s) }
+      }
+    }
+    const note = document.querySelector('.mac-note')
+    if (note) note.hidden = !current.startsWith('mac')
+  }
+  fetch('https://api.github.com/repos/solarynteam/onyx/releases/latest', { headers: { Accept: 'application/vnd.github+json' } })
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then((rel) => {
+      version = String(rel.tag_name || rel.name || '').replace(/^v/i, '')
+      for (const asset of rel.assets || []) {
+        if (/blockmap|\.yml$/i.test(asset.name)) continue
+        for (const p of Object.values(PLATFORMS)) if (p.match(asset.name)) assets[p.key] = { url: asset.browser_download_url, size: asset.size }
+      }
+      renderDownloads()
+    })
+    .catch(() => { version = ''; for (const el of document.querySelectorAll('.ver')) el.textContent = 'LATEST'; renderDownloads() })
+  renderDownloads()
+
+  // ---------- EN / FR ----------
+  const FR = {
+    'nav.features': 'Fonctions', 'nav.models': 'Modèles', 'nav.privacy': 'Confidentialité', 'nav.changelog': 'Nouveautés', 'nav.download': 'Télécharger',
+    'hero.title': 'Votre code.<br>Votre intelligence.',
+    'hero.lead': 'Onyx est un agent de code IA pour Windows et macOS. Il lit votre projet, modifie les fichiers, lance la compilation et vous montre exactement ce qui a changé. Modèles locaux gratuits, sans compte.',
+    'cta.github': 'Voir les versions', 'cta.also': 'Aussi pour',
+    'mac.note': 'Premier lancement sur Mac : dans Applications, clic droit sur Onyx, Ouvrir, puis Ouvrir à nouveau. Onyx n’est pas signé par Apple (99 $ par an), donc macOS demande une fois.', 'mac.more': 'Aide',
+    'mh.title': 'Ouvrir Onyx sur un Mac', 'mh.1': 'Ouvrez le fichier .dmg et glissez Onyx dans Applications.',
+    'mh.2': 'Dans Applications, clic droit (ou Ctrl-clic) sur Onyx, choisissez Ouvrir, puis Ouvrir à nouveau. Seulement la première fois.',
+    'mh.3': 'Si macOS dit que l’app est endommagée, ouvrez Terminal, lancez la commande ci-dessous, puis rouvrez Onyx.',
+    'mh.why': 'Cela arrive parce qu’Onyx est gratuit et n’est pas signé avec un certificat Apple payant. C’est la même version open source publiée sur GitHub. Sur Mac, Onyx vous prévient quand une nouvelle version sort et vous la téléchargez depuis cette page.',
+    'split.l.title': 'Local.', 'split.l.text': 'Faites tourner des modèles ouverts sur votre PC avec Ollama. Votre code ne quitte jamais la machine, rien à payer, fonctionne hors ligne.', 'split.l.meta': 'Ollama · LM Studio · 0 €',
+    'split.r.title': 'Prudent.', 'split.r.text': 'Chaque modification est un diff que vous pouvez relire et annuler. Les commandes dangereuses demandent toujours. L’agent ne sort jamais du dossier du projet.', 'split.r.meta': 'Auto · Tout · Approbation',
+    'shot.title': 'Chat, éditeur et terminal. Une seule fenêtre.', 'shot.sub': 'Éditeur Monaco, vrais terminaux PowerShell, explorateur, revue des modifications et Git, autour d’un agent qui exécute vraiment votre code.',
+    'f1.t': 'Demandez une fois. Il construit.', 'f1.p': 'Il inspecte le projet, écrit les fichiers, lance la compilation ou les tests, lit les erreurs et corrige jusqu’à ce que ça marche.',
+    'f2.t': 'Le plan avant le code', 'f2.p': 'Le mode Plan propose des étapes concrètes que vous approuvez, puis suit l’avancement en direct.',
+    'f3.t': 'Chaque changement est un diff', 'f3.p': 'Lignes ajoutées et supprimées par fichier et par tâche. Annulez un fichier ou toute la tâche en un clic.',
+    'f4.t': 'Testez sur place', 'f4.p': 'Lancez du Python, du JS ou du PowerShell depuis une réponse ou l’éditeur, prévisualisez le HTML dans sa fenêtre.',
+    'f5.t': 'Toujours à jour', 'f5.p': 'Les nouvelles versions se téléchargent en arrière-plan, sont vérifiées et s’installent au redémarrage.',
+    'f6.t': 'Sans compte', 'f6.p': 'Installez et c’est parti. Historique, projets et clés restent sur votre PC, clés chiffrées par Windows.',
+    'models.kicker': 'Modèles', 'models.title': 'Tous les modèles. Gratuit si vous voulez.',
+    'm.ollama': 'LOCAL · GRATUIT', 'm.zen': 'MODÈLES GRATUITS · LIMITÉS', 'm.or': 'MODÈLES :FREE + PAYANTS', 'm.tiers': 'OFFRES GRATUITES', 'm.paid': 'VOTRE CLÉ API', 'm.local': 'LOCAL · GRATUIT',
+    'footer.rights': 'Tous droits réservés', 'final.title': 'Demandez.<br>Relisez. Livrez.', 'final.free': 'Gratuit'
+  }
+  const EN = {}
+  for (const el of document.querySelectorAll('[data-i18n]')) EN[el.dataset.i18n] = el.textContent
+  for (const el of document.querySelectorAll('[data-i18n-html]')) EN[el.dataset.i18nHtml] = el.innerHTML
+  function setLang(l) {
+    const d = l === 'fr' ? FR : EN
+    document.documentElement.lang = l
+    for (const el of document.querySelectorAll('[data-i18n]')) el.textContent = d[el.dataset.i18n] ?? EN[el.dataset.i18n]
+    for (const el of document.querySelectorAll('[data-i18n-html]')) el.innerHTML = d[el.dataset.i18nHtml] ?? EN[el.dataset.i18nHtml]
+    for (const b of document.querySelectorAll('.lang button')) b.setAttribute('aria-pressed', String(b.dataset.lang === l))
+    if (typeof renderDownloads === 'function') renderDownloads()
+    try { localStorage.setItem('onyx-lang', l) } catch {}
+  }
+  for (const b of document.querySelectorAll('.lang button')) b.addEventListener('click', () => setLang(b.dataset.lang))
+  let saved = null; try { saved = localStorage.getItem('onyx-lang') } catch {}
+  setLang(saved || (navigator.language || '').startsWith('fr') ? (saved || 'fr') : 'en')
+
+  // ---------- details ----------
+  document.getElementById('year').textContent = new Date().getFullYear()
+  const nav = document.getElementById('nav')
+  addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 20), { passive: true })
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }), { threshold: .12 })
+  document.querySelectorAll('.reveal').forEach((el) => io.observe(el))
+})()
+</script>
+</body>
+</html>

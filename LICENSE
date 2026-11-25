@@ -1,0 +1,32 @@
+Onyx — Proprietary License
+
+Copyright (c) 2026 Solaryn Team (github.com/solarynteam). All rights reserved.
+
+The source code of Onyx is published for transparency only. It is NOT open source.
+
+1. PERMITTED
+   You may download, install and use the official Onyx application, as distributed at
+   https://github.com/solarynteam/onyx/releases and https://solarynteam.github.io/onyx/,
+   free of charge, for personal or commercial work. You may read the source code.
+
+2. FORBIDDEN — without prior written permission from the copyright holder, you may not:
+   a) copy, fork for redistribution, modify, translate, adapt or create derivative works
+      of Onyx or any part of its source code, design, user interface, logo or website;
+   b) build, publish, sell or distribute any application, product or service that copies,
+      imitates or is substantially based on Onyx, its code, its interface or its design;
+   c) redistribute, sublicense, rent or sell Onyx or any part of it;
+   d) remove or alter copyright notices, the Onyx name or the Onyx logo;
+   e) use the Onyx name or logo for another product.
+
+3. THIRD-PARTY COMPONENTS
+   Onyx includes open-source libraries (Electron, React, Monaco Editor, xterm.js and
+   others). Each remains under its own license; this license does not restrict them.
+
+4. NO WARRANTY
+   Onyx is provided "as is", without warranty of any kind. The copyright holder is not
+   liable for any damage arising from its use.
+
+5. TERMINATION
+   Any breach of section 2 automatically ends your right to use Onyx.
+
+For permission requests: https://github.com/solarynteam/onyx/issues
